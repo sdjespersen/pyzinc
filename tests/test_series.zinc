@@ -1,0 +1,7 @@
+ver:"3.0" view:"chart" hisStart:2020-05-18T00:00:00-07:00 Los_Angeles hisEnd:2020-05-18T01:15:00-07:00 Los_Angeles hisLimit:10000 dis:"Mon 18-May-2020"
+ts disKey:"ui::timestamp" tz:"Los_Angeles" chartFormat:"ka",v0 id:@p:q01b001:r:0197767d-c51944e4 "Building One VAV1-01 Eff Heat SP" navName:"Eff Heat SP" point his siteRef:@p:q01b001:r:8fc116f8-72c5320c "Building One" equipRef:@p:q01b001:r:b78a8dcc-828caa1b "Building One VAV1-01" curVal:65.972°F curStatus:"ok" kind:"Number" unit:"°F" tz:"Los_Angeles" sp temp cur haystackPoint air effective heating
+2020-05-17T23:47:08-07:00 Los_Angeles,
+2020-05-17T23:55:00-07:00 Los_Angeles,68.553°F
+2020-05-18T00:00:00-07:00 Los_Angeles,68.554°F
+2020-05-18T00:05:00-07:00 Los_Angeles,69.723°F
+2020-05-18T01:13:09-07:00 Los_Angeles,
