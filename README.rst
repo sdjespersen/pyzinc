@@ -2,9 +2,10 @@
 
 ## Overview
 
-`Zinc <https://project-haystack.org/doc/Zinc>` is a CSV-like format for Project
-Haystack. This project exists solely to make it simple---and *fast!*---to load
-Zinc-format strings into a ``ZincDataFrame`` or ``ZincSeries``.
+`Zinc <https://project-haystack.org/doc/Zinc>`_ is a CSV-like format for Project
+Haystack. This project exists solely to make it simple—and *fast!*—to load
+Zinc-format strings into a ``ZincDataFrame`` or ``ZincSeries`` (which themselves
+are just extended Pandas types).
 
 This implementation does not claim to adhere to the Zinc spec yet, as it is
 still in development.
