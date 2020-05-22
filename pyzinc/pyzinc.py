@@ -1,5 +1,3 @@
-import datetime
-import hszinc
 import io
 import logging
 import pandas as pd
@@ -7,7 +5,7 @@ import re
 
 from collections import OrderedDict
 from pandas.api.types import CategoricalDtype
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 
 DEFAULT_TZ = 'Los_Angeles'
@@ -22,7 +20,12 @@ ENUM_COLTAG = "enum"
 NUMBER_KIND = "Number"
 STRING_KIND = "Str"
 
+# We don't want to be in the business of maintaining this list; it's solely for
+# heuristically inferring the unit type of a series that didn't come along with
+# some metadata.
 NUMERIC_UNIT_SUFFIXES = ("°F", "°C", "%", "cfm", "kW")
+
+NUMERIC_TAGS = ('curVal', 'precision', 'writeLevel', 'writeVal')
 
 
 class ZincParseException(Exception):
@@ -92,7 +95,7 @@ def zinc_to_frame(zinc: str) -> ZincDataFrame:
     splits = re.split(NEWLINE_PATTERN, zinc, maxsplit=2)
     if len(splits) < 2:
         raise ZincParseException("Malformed input")
-    column_info = _parse_zinc_header("\n".join(splits[:2]))
+    column_info = _parse_zinc_header(splits[1])
     data = None
     if len(splits) == 3:
         # zinc can indicate "null" with "N"; in pandas-land, this
@@ -109,7 +112,6 @@ def zinc_to_frame(zinc: str) -> ZincDataFrame:
                 else:
                     renaming[i] = k
         data.rename(columns=renaming, inplace=True)
-        print(f"{data=}")
         for i, col in enumerate(column_info):
             colinfo = column_info[col]
             cname = data.columns[i]
@@ -127,29 +129,97 @@ def zinc_to_series(zinc: str) -> ZincSeries:
 
 
 def _parse_zinc_header(header: str) -> Dict[str, Dict[str, Any]]:
-    # TODO: Don't use hszinc; write something in-house that's maybe faster
-    parsed = hszinc.parse(header)[0]
-    colinfo = OrderedDict()  # type: OrderedDict[str, Dict[str, Any]]
-    for c, v in parsed.column.items():
-        colinfo[c] = {}
-        for k, val in v.items():
-            colinfo[c][k] = _untype_hszinc_scalar(val)
-    return colinfo
+    column_info = OrderedDict()  # type: OrderedDict[str, Dict[str, Any]]
+    for col in _split_columns(header):
+        toks = _tokenize_column(col)
+        colname, v = next(toks)
+        assert v == MARKER
+        column_info[colname] = {}
+        for k, v in toks:
+            if v is MARKER:
+                column_info[colname][k] = v
+            else:
+                v = v.strip('"')
+                if v.startswith('@'):
+                    # this is a ref
+                    refid, refname = v.split(' ', maxsplit=1)
+                    column_info[colname][k] = (refid, refname.strip('"'))
+                else:
+                    column_info[colname][k] = v
+        # now that we have all the info, we can parse relevant values
+        unit = column_info[colname].get(UNIT_COLTAG, None)
+        for tag in NUMERIC_TAGS:
+            if tag in column_info[colname]:
+                if unit is not None:
+                    val = column_info[colname][tag]
+                    column_info[colname][tag] = float(val.rstrip(unit))
+    return column_info
 
 
-def _untype_hszinc_scalar(val: Any) -> Union[str, float]:
-    if val is hszinc.MARKER:
-        return MARKER
-    elif isinstance(val, hszinc.datatypes.Ref):
-        return ('@' + val.name, val.value)
-    elif isinstance(val, hszinc.datatypes.Quantity):
-        return val.value
-    elif isinstance(val, datetime.datetime):
-        return val.isoformat()
-    elif isinstance(val, str) or isinstance(val, float):
-        return val
+def _split_columns(s):
+    i, j = -1, 0
+    inside_quotes = False
+    while j < len(s):
+        c = s[j]
+        if c == "\\":
+            j += 1
+        elif c == '"':
+            inside_quotes = not inside_quotes
+        elif c == "," and not inside_quotes:
+            yield s[i+1:j]
+            i = j
+        j += 1
+    # don't forget the last one!
+    yield s[i+1:j]
+
+
+def _tokenize_column(s):
+    i, j = -1, 0
+    inside_quotes, inside_ref = False, False
+    tag = None
+    while j < len(s):
+        c = s[j]
+        if c == "\\":
+            # always skip escaped chars
+            j += 1
+        elif tag is None:
+            # we are tokenizing a tag
+            if c == ':':
+                # tag with nontrivial value found
+                tag = s[i+1:j]
+                i = j
+                # lookahead to see if ref
+                if s[j+1] == '@':
+                    j += 1
+                    inside_ref = True
+            elif c == " ":
+                # this is a marker tag; immediately yield
+                yield s[i+1:j], MARKER
+                i = j
+        else:
+            # we are tokenizing a value
+            if c == '"' and inside_quotes and inside_ref:
+                # this is the end of a ref!
+                j += 1
+                assert j == len(s) or s[j] == " "
+                yield tag, s[i+1:j]
+                i = j
+                tag = None
+                inside_quotes, inside_ref = False, False
+            elif c == '"':
+                # this is a normal quote
+                inside_quotes = not inside_quotes
+            elif c == " " and not (inside_quotes or inside_ref):
+                # found a legit value
+                yield tag, s[i+1:j]
+                i = j
+                tag = None
+        j += 1
+    # we've reached the end of the string
+    if tag is None:
+        yield s[i+1:j], MARKER
     else:
-        raise ValueError(f"{type(val)} with value {val} not understood")
+        yield tag, s[i+1:j]
 
 
 def _sanitize_zinc_series(
@@ -157,10 +227,13 @@ def _sanitize_zinc_series(
     if colinfo:
         kind = colinfo[KIND_COLTAG]
         if kind == NUMBER_KIND:
-            # Now we should be able to safely strip units
-            unitless = series.str.rstrip(colinfo[UNIT_COLTAG])
-            # Parse as numeric type
-            return pd.to_numeric(unitless)
+            if UNIT_COLTAG in colinfo:
+                # Now we should be able to safely strip units
+                # Parse as numeric type
+                unitless = series.str.rstrip(colinfo[UNIT_COLTAG])
+                return pd.to_numeric(unitless)
+            else:
+                return series
         elif ENUM_COLTAG in colinfo:
             cat_type = CategoricalDtype(
                 categories=colinfo[ENUM_COLTAG].split(","))
@@ -172,6 +245,7 @@ def _sanitize_zinc_series(
         for suffix in NUMERIC_UNIT_SUFFIXES:
             if series[0].endswith(suffix):
                 return pd.to_numeric(series.str.rstrip(suffix))
+    return series
 
 
 def _set_datetime_index(data, colinfo):

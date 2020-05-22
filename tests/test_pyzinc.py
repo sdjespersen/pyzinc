@@ -111,14 +111,15 @@ def test_zinc_to_frame():
             'writable': pyzinc.MARKER,
             'writeStatus': 'unknown',
             'zone': pyzinc.MARKER,
-            'hisCollectInterval': 5.0,
+            'hisCollectInterval': '5min',
             'heating': pyzinc.MARKER,
             'offset': pyzinc.MARKER,
             'writeLevel': 8.0,
             'haystackPoint': pyzinc.MARKER,
             'writeVal': -10.0,
-            'actions': ('ver:"3.0"\ndis,expr\n"Override","pointOverride($self,'
-                        ' $val, $duration)"\n"Auto","pointAuto($self)"\n')
+            'actions': ('ver:\\"3.0\\"\\ndis,expr\\n\\"Override\\",'
+                        '\\"pointOverride(\\$self, \\$val, \\$duration)\\"\\n'
+                        '\\"Auto\\",\\"pointAuto(\\$self)\\"\\n')
         },
         v4={
             'id': ('@p:q01b060:r:260ce2bb-2ef5065f',
@@ -225,8 +226,7 @@ def test_zinc_to_series():
     pd.testing.assert_series_equal(actual, expected)
 
 
-# WAIT A MINUTE. DOES hisRead REALLY NOT RETURN MORE EXTENSIVE METADATA? IS
-# THIS TEST CASE VALID?
+# TODO: Confirm that this test case is valid.
 def test_hisread_zinc_to_series():
     expected_colinfo = OrderedDict(ts={}, val={})
     expected_series = pd.Series(
