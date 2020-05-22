@@ -34,8 +34,8 @@ you can load it with
   with open("example.zinc", encoding="utf-8") as f:
       heating_sp = pyzinc.to_zinc_series(f.read())
 
-Since `pyzinc.ZincDataFrame` inherits from `pandas.DataFrame`, and
-`pyzinc.Series` inherits from `pandas.Series`, you can perform all the usual
+Since ``pyzinc.ZincDataFrame`` inherits from ``pandas.DataFrame``, and
+``pyzinc.Series`` inherits from ``pandas.Series``, you can perform all the usual
 tasks you might wish to on a familiar Pandas object. The only added attribute is
-a `column_info` containing an `OrderedDict` of metadata about the table or
+a ``column_info`` containing an ``OrderedDict`` of metadata about the table or
 series.
