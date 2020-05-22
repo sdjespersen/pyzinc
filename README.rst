@@ -2,16 +2,16 @@
 
 ## Overview
 
-[Zinc](https://project-haystack.org/doc/Zinc) is a CSV-like format for Project
-Haystack. This project exists solely to make it simple---and _fast!_---to load
-Zinc-format strings into a `ZincDataFrame` or `ZincSeries`.
+`Zinc <https://project-haystack.org/doc/Zinc>` is a CSV-like format for Project
+Haystack. This project exists solely to make it simple---and *fast!*---to load
+Zinc-format strings into a ``ZincDataFrame`` or ``ZincSeries``.
 
 This implementation does not claim to adhere to the Zinc spec yet, as it is
 still in development.
 
 ## Example usage
 
-Say you have the following in `example.zinc`:
+Say you have the following in ``example.zinc``:
 
 ```
 ver:"3.0" view:"chart" hisStart:2020-05-18T00:00:00-07:00 Los_Angeles hisEnd:2020-05-18T01:15:00-07:00 Los_Angeles hisLimit:10000 dis:"Mon 18-May-2020"
