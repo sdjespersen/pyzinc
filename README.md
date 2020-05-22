@@ -1,4 +1,4 @@
-# pyzinc: Bringing Zinc to Pandas
+# pyzinc: Python support for Zinc (with Pandas)
 
 ## Overview
 
