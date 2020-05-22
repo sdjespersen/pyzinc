@@ -4,13 +4,16 @@ pyzinc: Python support for Zinc (with Pandas)
 Overview
 --------
 
-`Zinc <https://project-haystack.org/doc/Zinc>`_ is a CSV-like format for Project
-Haystack. This project exists solely to make it simple—and *fast!*—to load
-Zinc-format strings into a ``ZincDataFrame`` or ``ZincSeries`` (which themselves
-are just extended Pandas types).
+`Zinc <https://project-haystack.org/doc/Zinc>`_ is a CSV-like format for
+Project Haystack. This project exists solely to make it simple—and *fast!*—to
+load Zinc-format strings into a ``ZincDataFrame`` or ``ZincSeries`` (which
+themselves are just extended Pandas types).
 
 This implementation does not claim to adhere to the Zinc spec yet, as it is
 still in development.
+
+Other Python libraries for Zinc exist, notably `hszinc
+<https://github.com/widesky/hszinc>`_. So why this library? Basically only one reason: :ref:`performance`.
 
 Example usage
 -------------
@@ -35,7 +38,15 @@ you can load it with
       heating_sp = pyzinc.to_zinc_series(f.read())
 
 Since ``pyzinc.ZincDataFrame`` inherits from ``pandas.DataFrame``, and
-``pyzinc.Series`` inherits from ``pandas.Series``, you can perform all the usual
-tasks you might wish to on a familiar Pandas object. The only added attribute is
-a ``column_info`` containing an ``OrderedDict`` of metadata about the table or
-series.
+``pyzinc.Series`` inherits from ``pandas.Series``, you can perform all the
+usual tasks you might wish to on a familiar Pandas object. The only added
+attribute is a ``column_info`` containing an ``OrderedDict`` of metadata about
+the table or series.
+
+.. _performance:
+
+Performance
+-----------
+
+Comparing pyzinc with hszinc, on an 11MB Grid with 2002 columns and 849 rows,
+``hszinc.parse`` took ????? seconds and ``pyzinc.to_zinc_frame`` took 37.6 seconds.
