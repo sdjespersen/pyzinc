@@ -13,7 +13,7 @@ This implementation does not claim to adhere to the Zinc spec yet, as it is
 still in development.
 
 Other Python libraries for Zinc exist, notably `hszinc
-<https://github.com/widesky/hszinc>`_. So why this library? Basically only one reason: :ref:`performance`_.
+<https://github.com/widesky/hszinc>`_. So why this library? Basically only one reason: `performance`_.
 
 Example usage
 -------------
