@@ -13,7 +13,9 @@ This implementation does not claim to adhere to the Zinc spec yet, as it is
 still in development.
 
 Other Python libraries for Zinc exist, notably `hszinc
-<https://github.com/widesky/hszinc>`_. So why this library? Basically only one reason: `performance`_.
+<https://github.com/widesky/hszinc>`_. So why this library? Basically only one
+reason: `performance`_. Note that this does not have feature parity with the
+hszinc library, so this comparison is not yet fair.
 
 Example usage
 -------------
@@ -43,10 +45,23 @@ usual tasks you might wish to on a familiar Pandas object. The only added
 attribute is a ``column_info`` containing an ``OrderedDict`` of metadata about
 the table or series.
 
-.. _performance:
-
 Performance
 -----------
 
-Comparing pyzinc with hszinc, on an 11MB Grid with 2002 columns and 849 rows,
-``hszinc.parse`` took ????? seconds and ``pyzinc.to_zinc_frame`` took 37.6 seconds.
+Run ``bench/benchmark.py`` for these numbers.
+
+On a 96KB Zinc Grid with 16 columns and 287 rows:
+
+* ``pyzinc.to_zinc_frame`` takes 41ms
+* ``hszinc.parse`` takes about 8.6 seconds
+
+On a 178KB Zinc Grid with 32 columns and 287 rows:
+
+* ``pyzinc.to_zinc_frame`` takes 73ms
+* ``hszinc.parse`` takes about 16.8 seconds
+
+In other words, ``pyzinc.to_zinc_frame`` is around 200x faster than
+``hszinc.parse``, mostly thanks to using ``pandas.read_csv`` under the hood.
+
+On a larger 11MB Grid with 2002 columns and 849 rows, ``pyzinc.to_zinc_frame``
+took 37.6 seconds, and ``hszinc.parse`` did not terminate within 10 minutes.

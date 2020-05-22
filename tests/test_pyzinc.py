@@ -2,7 +2,7 @@
 import numpy as np
 import os
 import pandas as pd
-from ..pyzinc import pyzinc
+import pyzinc
 
 from collections import OrderedDict
 from pandas.api.types import CategoricalDtype

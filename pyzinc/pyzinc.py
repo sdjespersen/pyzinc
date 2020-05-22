@@ -224,7 +224,10 @@ def _tokenize_column(s):
 
 def _sanitize_zinc_series(
         series: pd.Series, colinfo: Dict[str, Any]) -> pd.Series:
-    if colinfo:
+    if series.isna().all():
+        # we are powerless in this situation
+        return series
+    elif colinfo:
         kind = colinfo[KIND_COLTAG]
         if kind == NUMBER_KIND:
             if UNIT_COLTAG in colinfo:
