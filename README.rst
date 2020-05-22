@@ -27,7 +27,7 @@ Say you have the following in ``example.zinc``::
 
 you can load it with
 
-:python:
+.. code:: python
   import pyzinc
 
   with open("example.zinc", encoding="utf-8") as f:
