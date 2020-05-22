@@ -95,7 +95,12 @@ def zinc_to_frame(zinc: str) -> ZincDataFrame:
     column_info = _parse_zinc_header("\n".join(splits[:2]))
     data = None
     if len(splits) == 3:
-        data = pd.read_csv(io.StringIO(splits[2]), header=None)
+        # zinc can indicate "null" with "N"; in pandas-land, this
+        # is not distinct from "NaN", so we convert
+        data = pd.read_csv(
+            io.StringIO(splits[2]),
+            header=None,
+            na_values='N')
         renaming = {}
         for i, (k, v) in enumerate(column_info.items()):
             if i > 0:
@@ -149,27 +154,24 @@ def _untype_hszinc_scalar(val: Any) -> Union[str, float]:
 
 def _sanitize_zinc_series(
         series: pd.Series, colinfo: Dict[str, Any]) -> pd.Series:
-    # zinc can indicate "null" with "N"; in pandas-land, this
-    # is not distinct from "NaN", so we convert
-    sanitized = series.str.replace(r"^N$", "")
     if colinfo:
         kind = colinfo[KIND_COLTAG]
         if kind == NUMBER_KIND:
             # Now we should be able to safely strip units
-            unitless = sanitized.str.rstrip(colinfo[UNIT_COLTAG])
+            unitless = series.str.rstrip(colinfo[UNIT_COLTAG])
             # Parse as numeric type
             return pd.to_numeric(unitless)
         elif ENUM_COLTAG in colinfo:
             cat_type = CategoricalDtype(
                 categories=colinfo[ENUM_COLTAG].split(","))
-            return sanitized.astype(cat_type)
+            return series.astype(cat_type)
         elif kind != STRING_KIND:
             raise ZincParseException(f"Unrecognized kind {kind}")
     else:
         logging.debug("No column headers, heuristically inferring type")
         for suffix in NUMERIC_UNIT_SUFFIXES:
-            if sanitized[0].endswith(suffix):
-                return pd.to_numeric(sanitized.str.rstrip(suffix))
+            if series[0].endswith(suffix):
+                return pd.to_numeric(series.str.rstrip(suffix))
 
 
 def _set_datetime_index(data, colinfo):
